@@ -1,11 +1,14 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, BelongsTo, HasMany, ModelQueryBuilderContract, beforeCreate, beforeFetch, beforeFind, belongsTo, column, hasMany } from '@ioc:Adonis/Lucid/Orm'
 import { v4 as uuid } from 'uuid'
+import ignoreDeleted from 'App/Hooks/ignoreDeleted'
+import Farm from './Farm'
+import User from './User'
 
 export default class Producer extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  @column()
+  @column({ serializeAs: null })
   public id: number
 
   @column({ isPrimary: true })
@@ -23,6 +26,9 @@ export default class Producer extends BaseModel {
   @column()
   public state: string
 
+  @column({ serializeAs: null, prepare: (value: string) => value.toLowerCase() })
+  public userId: number
+
   @column.dateTime()
   public deletedAt: DateTime
 
@@ -36,4 +42,20 @@ export default class Producer extends BaseModel {
   public static assignUuid(producer: Producer) {
     producer.uuid = uuid()
   }
+
+  @beforeFetch()
+  public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof Producer>) {
+    ignoreDeleted(query)
+  }
+
+  @beforeFind()
+  public static findIgnoreDeleted(query: ModelQueryBuilderContract<typeof Producer>) {
+    ignoreDeleted(query)
+  }
+
+  @hasMany(() => Farm)
+  public farms: HasMany<typeof Farm>
+
+  @belongsTo(() => User)
+  public user: BelongsTo<typeof User>
 }
