@@ -20,6 +20,12 @@ export default class UsersController {
     }
   }
 
+
+  /**
+   * POST /users
+   * @param name, email, password 
+   * @returns User created
+   */
   public async store({ request, response }: HttpContextContract) {
     try {
       const { name, email, password } = request.body()
@@ -37,11 +43,53 @@ export default class UsersController {
     }
   }
 
-  public async show({}: HttpContextContract) {}
+  public async show({ params, response }: HttpContextContract) {
+    try {
+      const { id } = params
 
-  public async edit({}: HttpContextContract) {}
+      return await User.findOrFail(id)
+    } catch (e) {
+      if (this.isDev) {
+        console.error(`There is an error in UsersController.show: ${e.message}`)
+        return e
+      } else {
+        response.status(500).json({ message: 'Internal server error' })
+      }
+    }
+  }
 
-  public async update({}: HttpContextContract) {}
+  public async update({ params, request, response }: HttpContextContract) {
+    try {
+      const { id } = params;
 
-  public async destroy({}: HttpContextContract) {}
+      const { name, email, password } = request.body()
+
+      const user = await User.query().where('uuid', id).update({ name, email, password })
+
+      return { message: 'User updated successfully', user }
+    } catch (e) {
+      if (this.isDev) {
+        console.error(`There is an error in UsersController.update: ${e.message}`)
+        return e
+      } else
+        return response.status(500).json({ message: 'Internal server error' })
+    }
+  }
+
+  public async destroy({ params, response }: HttpContextContract) {
+    try {
+      const { id } = params
+
+      await User.query().where('uuid', id).update({ deletedAt: new Date() })
+
+      return { message: 'User deleted successfully' }
+    } catch (e) {
+      if (this.isDev) {
+        console.error(`There is an error in UsersController.destroy: ${e.message}`)
+        return e
+      } else {
+        response.status(500).json({ message: 'Internal server error' })
+      }
+    }
+  }
 }
