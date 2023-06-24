@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, ModelQueryBuilderContract, beforeFetch, beforeFind, column } from '@ioc:Adonis/Lucid/Orm'
+import ignoreDeleted from 'App/Hooks/ignoreDeleted'
 
 export default class Culture extends BaseModel {
   @column({ isPrimary: true })
@@ -8,7 +9,7 @@ export default class Culture extends BaseModel {
   @column()
   public name: string
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'deletedAt' })
   public deletedAt: DateTime
 
   @column.dateTime({ autoCreate: true, columnName: 'createdAt' })
@@ -16,4 +17,14 @@ export default class Culture extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updatedAt' })
   public updatedAt: DateTime
+
+  @beforeFetch()
+  public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof Culture>) {
+    ignoreDeleted(query)
+  }
+
+  @beforeFind()
+  public static findIgnoreDeleted(query: ModelQueryBuilderContract<typeof Culture>) {
+    ignoreDeleted(query)
+  }
 }

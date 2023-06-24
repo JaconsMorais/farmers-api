@@ -1,15 +1,19 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column } from '@ioc:Adonis/Lucid/Orm'
-import { v4 as uuid } from 'uuid'
+import { BaseModel, ModelQueryBuilderContract, beforeFetch, beforeFind, beforeSave, column } from '@ioc:Adonis/Lucid/Orm'
 import Hash from '@ioc:Adonis/Core/Hash'
+import ignoreDeleted from 'App/Hooks/ignoreDeleted'
 
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
-  @column()
+
+  @column({ serializeAs: null })
   public id: number
 
   @column({ isPrimary: true })
-  public uuid: string
+  public uid: string
+
+  @column()
+  public rememberMeToken: string | null
 
   @column()
   public name: string
@@ -17,25 +21,33 @@ export default class User extends BaseModel {
   @column()
   public email: string
 
-  @column()
+  @column({ serializeAs: null })
   public password: string
 
   @column.dateTime()
   public deletedAt: DateTime
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, columnName: 'createdAt' })
   public createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updatedAt' })
   public updatedAt: DateTime
 
-  @beforeCreate()
-  public static assignUuid(user: User) {
-    user.uuid = uuid()
+  @beforeSave()
+  public static async hashPassword(user: User) {
+    if (user.$dirty.password) {
+      user.password = await Hash.make(user.password)
+    }
   }
 
-  @beforeCreate()
-  public static async hashPassword(user: User) {
-    user.password = await Hash.make(user.password)
+
+  @beforeFetch()
+  public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof User>) {
+    ignoreDeleted(query)
+  }
+
+  @beforeFind()
+  public static findIgnoreDeleted(query: ModelQueryBuilderContract<typeof User>) {
+    ignoreDeleted(query)
   }
 }

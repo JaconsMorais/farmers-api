@@ -1,12 +1,13 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column, manyToMany, ManyToMany } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, beforeCreate, beforeFetch, beforeFind, column, manyToMany, ManyToMany, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Orm'
 import Culture from './Culture'
 import { v4 as uuid } from 'uuid'
+import ignoreDeleted from 'App/Hooks/ignoreDeleted'
 
 export default class Farm extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  @column()
+  @column({ serializeAs: null })
   public id: number
 
   @column({ isPrimary: true })
@@ -46,5 +47,15 @@ export default class Farm extends BaseModel {
   @beforeCreate()
   public static assignUuid(farm: Farm) {
     farm.uuid = uuid()
+  }
+
+  @beforeFetch()
+  public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof Farm>) {
+    ignoreDeleted(query)
+  }
+
+  @beforeFind()
+  public static findIgnoreDeleted(query: ModelQueryBuilderContract<typeof Farm>) {
+    ignoreDeleted(query)
   }
 }
