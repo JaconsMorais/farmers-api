@@ -6,12 +6,14 @@ export default class extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.uuid('uuid').unique().notNullable().index()
+      table.uuid('uuid').unique().notNullable().index().defaultTo(this.db.knexRawQuery('uuid_generate_v4()'))
 
       table.decimal('documentId', 15, 0).notNullable().index()
       table.string('name', 100).notNullable()
       table.string('city', 50)
       table.string('state', 2)
+
+      table.integer('userId').unsigned().references('id').inTable('users').onDelete('CASCADE')
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL
