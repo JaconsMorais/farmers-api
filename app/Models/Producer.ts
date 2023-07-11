@@ -1,9 +1,21 @@
 import { DateTime } from 'luxon'
-import { BaseModel, BelongsTo, HasMany, ModelQueryBuilderContract, beforeCreate, beforeFetch, beforeFind, belongsTo, column, hasMany } from '@ioc:Adonis/Lucid/Orm'
-import { v4 as uuid } from 'uuid'
+import {
+  BaseModel,
+  BelongsTo,
+  HasMany,
+  ModelQueryBuilderContract,
+  beforeFetch,
+  beforeFind,
+  beforeSave,
+  belongsTo,
+  column,
+  hasMany,
+} from '@ioc:Adonis/Lucid/Orm'
 import ignoreDeleted from 'App/Hooks/ignoreDeleted'
+import findForeignKey from 'App/Hooks/findForeignKey'
 import Farm from './Farm'
 import User from './User'
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class Producer extends BaseModel {
   public static selfAssignPrimaryKey = true
@@ -17,7 +29,7 @@ export default class Producer extends BaseModel {
   @column()
   public name: string
 
-  @column()
+  @column({})
   public documentId: number
 
   @column()
@@ -26,22 +38,23 @@ export default class Producer extends BaseModel {
   @column()
   public state: string
 
-  @column({ serializeAs: null, prepare: (value: string) => value.toLowerCase() })
-  public userId: number
+  @column({
+    serializeAs: null,
+    prepare: (value: string) =>
+      Number.isNaN(Number(value))
+        ? Database.rawQuery(`(${User.query().where('uuid', value).select('id').toQuery()})`)
+        : value,
+  })
+  public userId: any
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'deleted_at' })
   public deletedAt: DateTime
 
-  @column.dateTime({ autoCreate: true, columnName: 'createdAt' })
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   public createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updatedAt' })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   public updatedAt: DateTime
-
-  @beforeCreate()
-  public static assignUuid(producer: Producer) {
-    producer.uuid = uuid()
-  }
 
   @beforeFetch()
   public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof Producer>) {
@@ -53,7 +66,14 @@ export default class Producer extends BaseModel {
     ignoreDeleted(query)
   }
 
-  @hasMany(() => Farm)
+  @beforeSave()
+  public static foreignKeys(query: ModelQueryBuilderContract<typeof Producer>): void {
+    findForeignKey(query)
+  }
+
+  @hasMany(() => Farm, {
+    foreignKey: 'producerId',
+  })
   public farms: HasMany<typeof Farm>
 
   @belongsTo(() => User)

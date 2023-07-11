@@ -20,9 +20,31 @@
 
 import Route from '@ioc:Adonis/Core/Route'
 
-Route.resource('users', 'UsersController').apiOnly().middleware({
-  'index': ['auth'],
-  'show': ['auth'],
-  'update': ['auth'],
-  'destroy': ['auth'],
-})
+Route.resource('users', 'UsersController')
+  .apiOnly()
+  .middleware({
+    index: ['auth'],
+    show: ['auth'],
+    update: ['auth'],
+    destroy: ['auth'],
+  })
+
+Route.resource('login', 'AuthController')
+  .apiOnly()
+  .middleware({
+    show: ['auth'],
+    update: ['auth'],
+    destroy: ['auth'],
+  })
+
+Route.resource('/users/:userId/producers', 'ProducersController')
+  .apiOnly()
+  .where('userId', Route.matchers.uuid())
+  .where('id', Route.matchers.uuid())
+  .middleware({
+    index: ['auth'],
+    show: ['auth'],
+    create: ['auth'],
+    update: ['auth'],
+    destroy: ['auth'],
+  })
