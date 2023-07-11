@@ -1,17 +1,30 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, beforeFetch, beforeFind, column, manyToMany, ManyToMany, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Orm'
+import {
+  BaseModel,
+  beforeCreate,
+  beforeFetch,
+  beforeFind,
+  column,
+  manyToMany,
+  ManyToMany,
+  ModelQueryBuilderContract,
+} from '@ioc:Adonis/Lucid/Orm'
 import Culture from './Culture'
 import { v4 as uuid } from 'uuid'
 import ignoreDeleted from 'App/Hooks/ignoreDeleted'
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class Farm extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  @column({ serializeAs: null })
+  @column({ serializeAs: null, isPrimary: true })
   public id: number
 
-  @column({ isPrimary: true })
+  @column({})
   public uuid: string
+
+  @column({ columnName: 'producer_id' })
+  public producerId: any
 
   @column()
   public name: string
@@ -25,22 +38,27 @@ export default class Farm extends BaseModel {
   @column()
   public unusedArea: number
 
-  @column()
+  @column({
+    prepare: (value: string) =>
+      Number.isNaN(Number(value))
+        ? Database.rawQuery(`(${Culture.query().where('uuid', value).toQuery()})`)
+        : value,
+  })
   public cultureId: number
 
   @column.dateTime()
-  public deletedAt: DateTime
+  public deleted_at: DateTime
 
-  @column.dateTime({ autoCreate: true, columnName: 'createdAt' })
-  public createdAt: DateTime
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
+  public created_at: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updatedAt' })
-  public updatedAt: DateTime
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
+  public updated_at: DateTime
 
   @manyToMany(() => Culture, {
     pivotTable: 'farms_cultures',
-    pivotForeignKey: 'farmId',
-    pivotRelatedForeignKey: 'cultureId',
+    pivotForeignKey: 'farm_id',
+    pivotRelatedForeignKey: 'culture_id',
   })
   public cultures: ManyToMany<typeof Culture>
 

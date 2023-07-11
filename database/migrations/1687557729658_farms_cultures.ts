@@ -7,10 +7,15 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
 
-      table.integer('farmId').unsigned().references('id').inTable('farms').onDelete('CASCADE')
-      table.integer('cultureId').unsigned().references('id').inTable('cultures').onDelete('CASCADE')
+      table.integer('farm_id').unsigned().references('id').inTable('farms').onDelete('CASCADE')
+      table
+        .integer('culture_id')
+        .unsigned()
+        .references('id')
+        .inTable('cultures')
+        .onDelete('CASCADE')
 
-      table.unique(['farmId', 'cultureId'])
+      table.unique(['farm_id', 'culture_id'])
     })
   }
 

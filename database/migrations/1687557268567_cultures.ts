@@ -6,16 +6,21 @@ export default class extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.uuid('uuid').unique().notNullable().index().defaultTo(this.db.knexRawQuery('uuid(uuid_generate_v4())'))
+      table
+        .uuid('uuid')
+        .unique()
+        .notNullable()
+        .index()
+        .defaultTo(this.db.knexRawQuery('uuid(uuid_generate_v4())'))
 
       table.string('name', 50).notNullable().unique()
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL
        */
-      table.datetime('deletedAt')
-      table.timestamp('createdAt', { useTz: true })
-      table.timestamp('updatedAt', { useTz: true })
+      table.datetime('deleted_at')
+      table.timestamp('created_at', { useTz: true })
+      table.timestamp('updated_at', { useTz: true })
     })
   }
 

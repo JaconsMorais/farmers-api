@@ -1,16 +1,23 @@
 import { DateTime } from 'luxon'
-import { BaseModel, ModelQueryBuilderContract, beforeFetch, beforeFind, beforeSave, column } from '@ioc:Adonis/Lucid/Orm'
+import {
+  BaseModel,
+  ModelQueryBuilderContract,
+  beforeFetch,
+  beforeFind,
+  beforeSave,
+  column,
+} from '@ioc:Adonis/Lucid/Orm'
 import Hash from '@ioc:Adonis/Core/Hash'
 import ignoreDeleted from 'App/Hooks/ignoreDeleted'
 
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  @column({ serializeAs: null })
+  @column({ serializeAs: null, isPrimary: true, columnName: 'id' })
   public id: number
 
-  @column({ isPrimary: true })
-  public uid: string
+  @column({ columnName: 'uuid' })
+  public uuid: string
 
   @column()
   public rememberMeToken: string | null
@@ -27,10 +34,10 @@ export default class User extends BaseModel {
   @column.dateTime()
   public deletedAt: DateTime
 
-  @column.dateTime({ autoCreate: true, columnName: 'createdAt' })
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   public createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updatedAt' })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   public updatedAt: DateTime
 
   @beforeSave()
@@ -39,7 +46,6 @@ export default class User extends BaseModel {
       user.password = await Hash.make(user.password)
     }
   }
-
 
   @beforeFetch()
   public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof User>) {
