@@ -9,7 +9,7 @@ export default class UsersController {
 
       return User.query()
         .whereNull('deleted_at')
-        .paginate(page ?? 0, limit ?? 10)
+        .paginate(page ?? 1, limit ?? 10)
     } catch (e) {
       if (this.isDev) {
         console.error(`There is an error in UsersController.index: ${e.message}`)
@@ -20,10 +20,9 @@ export default class UsersController {
     }
   }
 
-
   /**
    * POST /users
-   * @param name, email, password 
+   * @param name, email, password
    * @returns User created
    */
   public async store({ request, response }: HttpContextContract) {
@@ -35,8 +34,8 @@ export default class UsersController {
       return user
     } catch (e) {
       if (this.isDev) {
-        console.error(`There is an error in UsersController.store: ${e.message}`)
-        return e.message
+        console.error(`There is an error in UsersController.store: ${e}`)
+        return response.status(500).send({ message: e.message })
       }
 
       return response.status(500).json({ message: 'Internal server error' })
@@ -60,7 +59,7 @@ export default class UsersController {
 
   public async update({ params, request, response }: HttpContextContract) {
     try {
-      const { id } = params;
+      const { id } = params
 
       const { name, email, password } = request.body()
 
@@ -71,8 +70,7 @@ export default class UsersController {
       if (this.isDev) {
         console.error(`There is an error in UsersController.update: ${e.message}`)
         return e
-      } else
-        return response.status(500).json({ message: 'Internal server error' })
+      } else return response.status(500).json({ message: 'Internal server error' })
     }
   }
 
@@ -80,7 +78,7 @@ export default class UsersController {
     try {
       const { id } = params
 
-      await User.query().where('uuid', id).update({ deletedAt: new Date() })
+      await User.query().where('uuid', id).update({ deleted_at: new Date() })
 
       return { message: 'User deleted successfully' }
     } catch (e) {
