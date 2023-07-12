@@ -4,6 +4,8 @@ import {
   BelongsTo,
   HasMany,
   ModelQueryBuilderContract,
+  afterCreate,
+  beforeCreate,
   beforeFetch,
   beforeFind,
   beforeSave,
@@ -12,7 +14,6 @@ import {
   hasMany,
 } from '@ioc:Adonis/Lucid/Orm'
 import ignoreDeleted from 'App/Hooks/ignoreDeleted'
-import findForeignKey from 'App/Hooks/findForeignKey'
 import Farm from './Farm'
 import User from './User'
 import Database from '@ioc:Adonis/Lucid/Database'
@@ -20,10 +21,10 @@ import Database from '@ioc:Adonis/Lucid/Database'
 export default class Producer extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  @column({ serializeAs: null })
+  @column({ serializeAs: null, isPrimary: true })
   public id: number
 
-  @column({ isPrimary: true })
+  @column({})
   public uuid: string
 
   @column()
@@ -47,6 +48,14 @@ export default class Producer extends BaseModel {
   })
   public userId: any
 
+  @column({
+    columnName: 'farm_id',
+    prepare: (value: string) => Number.isNaN(Number(value))
+      ? Database.rawQuery(`(${Farm.query().where('uuid', value).select('id').toQuery()})`)
+      : value
+  })
+  public farmId: any
+
   @column.dateTime({ columnName: 'deleted_at' })
   public deletedAt: DateTime
 
@@ -66,15 +75,8 @@ export default class Producer extends BaseModel {
     ignoreDeleted(query)
   }
 
-  @beforeSave()
-  public static foreignKeys(query: ModelQueryBuilderContract<typeof Producer>): void {
-    findForeignKey(query)
-  }
-
-  @hasMany(() => Farm, {
-    foreignKey: 'producerId',
-  })
-  public farms: HasMany<typeof Farm>
+  @belongsTo(() => Farm,)
+  public farm: BelongsTo<typeof Farm>
 
   @belongsTo(() => User)
   public user: BelongsTo<typeof User>

@@ -16,13 +16,13 @@ export default class Culture extends BaseModel {
   public name: string
 
   @column.dateTime({ columnName: 'deleted_at' })
-  public deleted_at: DateTime
+  public deletedAt: DateTime
 
   @column.dateTime({ autoCreate: true, columnName: 'created_at' })
-  public created_at: DateTime
+  public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
-  public updated_at: DateTime
+  public updatedAt: DateTime
 
   @beforeFetch()
   public static fetchIgnoreDeleted(query: ModelQueryBuilderContract<typeof Culture>) {

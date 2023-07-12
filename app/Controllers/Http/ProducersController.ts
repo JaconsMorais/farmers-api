@@ -4,10 +4,11 @@ import Env from '@ioc:Adonis/Core/Env'
 import User from 'App/Models/User'
 
 /** Validators */
-import StoreValidator from 'App/Validators/users/StoreValidator'
-import UpdateValidator from 'App/Validators/users/UpdateValidator'
-import DeleteValidator from 'App/Validators/users/DeleteValidator'
+import StoreValidator from 'App/Validators/producers/StoreValidator'
+import UpdateValidator from 'App/Validators/producers/UpdateValidator'
+
 import { DateTime } from 'luxon'
+import Farm from 'App/Models/Farm'
 export default class ProducersController {
   private isDev = Env.get('NODE_ENV') === 'development'
 
@@ -28,7 +29,7 @@ export default class ProducersController {
 
       return await Producer.query()
         .where('userId', user.id)
-        .preload('farms')
+        .preload('farm')
         .paginate(page ?? 1, limit ?? 10)
     } catch (e) {
       if (this.isDev) {
@@ -51,16 +52,21 @@ export default class ProducersController {
   public async store({ request, response, params, bouncer }: HttpContextContract) {
     const { userId } = params
     const { documentId, name, city, state } = request.body()
+    const { area, unusedArea, arableArea, farmName } = request.body()
 
     try {
-      await bouncer.with('ProducerPolicy').authorize('create', params?.userId)
+      await bouncer.with('ProducerPolicy').authorize('create', userId)
       await request.validate(StoreValidator)
 
-      return await Producer.create({ documentId, name, city, state, userId })
+      if (Number(area) !== Number(unusedArea) + Number(arableArea)) return response.status(400).send({ message: 'The sum of unusedArea and arableArea must be equal to area' })
+
+      const farm = await Farm.create({ area, unusedArea, arableArea, name: farmName })
+
+      return await Producer.create({ documentId, name, city, state, userId, farmId: farm.uuid })
     } catch (e) {
       if (this.isDev) {
         console.error(`There is an error in ProducersController.store: ${e.message}`)
-        return { message: e.message }
+        return response.status(500).send(e)
       } else return response.status(500).send({ message: 'Internal server error' })
     }
   }
@@ -71,10 +77,10 @@ export default class ProducersController {
    * @param producerId producer's uuid
    *
    */
-  public async show({ params, bouncer, response, request }: HttpContextContract) {
+  public async show({ params, bouncer, response }: HttpContextContract) {
     const { userId, producerId } = params
     try {
-      await bouncer.with('ProducerPolicy').authorize('view', params?.userId)
+      await bouncer.with('ProducerPolicy').authorize('view', userId)
 
       return await Producer.query()
         .whereHas('user', (query) => {
@@ -95,15 +101,24 @@ export default class ProducersController {
   public async update({ request, bouncer, params, response }: HttpContextContract) {
     const { userId, producerId } = params
     const { documentId, name, city, state } = request.body()
+    const { area, unusedArea, arableArea, farmName } = request.body()
 
     try {
       await bouncer.with('ProducerPolicy').authorize('create', userId)
       await request.validate(UpdateValidator)
 
+      if (Number(area) !== Number(unusedArea) + Number(arableArea)) return response.status(400).send({ message: 'The sum of unusedArea and arableArea must be equal to area' })
+
       const producer = await Producer.findByOrFail('uuid', producerId)
       producer.merge({ documentId, name, city, state, userId })
 
       await producer.save()
+
+      const farm = await Farm.findBy('producer_id', producer.id)
+
+      farm?.merge({ area, unusedArea, arableArea, name: farmName })
+
+      await farm?.save()
 
       return producer
     } catch (e) {
@@ -119,7 +134,6 @@ export default class ProducersController {
 
     try {
       await bouncer.with('ProducerPolicy').authorize('create', userId)
-      await request.validate(UpdateValidator)
 
       const producer = await Producer.findByOrFail('uuid', producerId)
       producer.merge({ deletedAt: DateTime.now() })

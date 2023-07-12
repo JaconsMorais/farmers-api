@@ -5,6 +5,8 @@ import {
   beforeFetch,
   beforeFind,
   column,
+  HasOne,
+  hasOne,
   manyToMany,
   ManyToMany,
   ModelQueryBuilderContract,
@@ -13,6 +15,7 @@ import Culture from './Culture'
 import { v4 as uuid } from 'uuid'
 import ignoreDeleted from 'App/Hooks/ignoreDeleted'
 import Database from '@ioc:Adonis/Lucid/Database'
+import Producer from './Producer'
 
 export default class Farm extends BaseModel {
   public static selfAssignPrimaryKey = true
@@ -22,9 +25,6 @@ export default class Farm extends BaseModel {
 
   @column({})
   public uuid: string
-
-  @column({ columnName: 'producer_id' })
-  public producerId: any
 
   @column()
   public name: string
@@ -61,6 +61,9 @@ export default class Farm extends BaseModel {
     pivotRelatedForeignKey: 'culture_id',
   })
   public cultures: ManyToMany<typeof Culture>
+
+  @hasOne(() => Producer)
+  public producer: HasOne<typeof Producer>
 
   @beforeCreate()
   public static assignUuid(farm: Farm) {

@@ -1,14 +1,17 @@
 import { DateTime } from 'luxon'
 import {
   BaseModel,
+  HasMany,
   ModelQueryBuilderContract,
   beforeFetch,
   beforeFind,
   beforeSave,
   column,
+  hasMany,
 } from '@ioc:Adonis/Lucid/Orm'
 import Hash from '@ioc:Adonis/Core/Hash'
 import ignoreDeleted from 'App/Hooks/ignoreDeleted'
+import Producer from './Producer'
 
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
@@ -56,4 +59,7 @@ export default class User extends BaseModel {
   public static findIgnoreDeleted(query: ModelQueryBuilderContract<typeof User>) {
     ignoreDeleted(query)
   }
+
+  @hasMany(() => Producer)
+  public producers: HasMany<typeof Producer>
 }

@@ -1,8 +1,8 @@
-import { schema, CustomMessages } from '@ioc:Adonis/Core/Validator'
+import { schema, rules, CustomMessages } from '@ioc:Adonis/Core/Validator'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 export default class UpdateValidator {
-  constructor(protected ctx: HttpContextContract) {}
+  constructor(protected ctx: HttpContextContract) { }
 
   /*
    * Define schema to validate the "shape", "type", "formatting" and "integrity" of data.
@@ -23,7 +23,12 @@ export default class UpdateValidator {
    *     ])
    *    ```
    */
-  public schema = schema.create({})
+  public schema = schema.create({
+    name: schema.string.optional({ trim: true }, [rules.maxLength(100)]),
+    email: schema.string.optional({ trim: true }, [rules.email(), rules.unique({ table: 'users', column: 'email' })]),
+    password: schema.string.optional({ trim: true }, [rules.minLength(8), rules.maxLength(50)]),
+    confirm_password: schema.string.optional({ trim: true }, [rules.confirmed('password')]),
+  })
 
   /**
    * Custom messages for validation failures. You can make use of dot notation `(.)`
@@ -36,5 +41,11 @@ export default class UpdateValidator {
    * }
    *
    */
-  public messages: CustomMessages = {}
+  public messages: CustomMessages = {
+    'email.unique': 'Email already exists',
+    'name.maxLength': 'Name must be less than 100 characters',
+    'password.minLength': 'Password must be at least 8 characters',
+    'password.maxLength': 'Password must be less than 50 characters',
+    'confirm_password.confirmed': 'Passwords do not match',
+  }
 }

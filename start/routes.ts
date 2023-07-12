@@ -29,13 +29,9 @@ Route.resource('users', 'UsersController')
     destroy: ['auth'],
   })
 
-Route.resource('login', 'AuthController')
-  .apiOnly()
-  .middleware({
-    show: ['auth'],
-    update: ['auth'],
-    destroy: ['auth'],
-  })
+Route.post('login', 'AuthController.store')
+Route.delete('login', 'AuthController.destroy').middleware('auth')
+Route.get('login', 'AuthController.index').middleware('auth')
 
 Route.resource('/users/:userId/producers', 'ProducersController')
   .apiOnly()
@@ -44,7 +40,28 @@ Route.resource('/users/:userId/producers', 'ProducersController')
   .middleware({
     index: ['auth'],
     show: ['auth'],
-    create: ['auth'],
+    store: ['auth'],
     update: ['auth'],
     destroy: ['auth'],
   })
+
+Route.resource('/producers/:producerId/farm', 'FarmsController').apiOnly().middleware({
+  index: ['auth'],
+  show: ['auth'],
+  store: ['auth'],
+  update: ['auth'],
+  destroy: ['auth'],
+})
+
+Route.resource('/cultures', 'CulturesController').apiOnly().middleware({
+  index: ['auth'],
+  show: ['auth'],
+  store: ['auth'],
+  update: ['auth'],
+  destroy: ['auth'],
+})
+
+Route.get('/users/:userId/statistics/total-farms', 'StatisticsController.totalFarms').middleware('auth')
+Route.get('/users/:userId/statistics/total-areas', 'StatisticsController.totalAreas').middleware('auth')
+Route.get('/users/:userId/statistics/total-producers-by-state', 'StatisticsController.totalStateProducers').middleware('auth')
+Route.get('/users/:userId/statistics/total-producers-by-use', 'StatisticsController.totalAreaUse').middleware('auth')

@@ -18,7 +18,10 @@ export default class extends BaseSchema {
       table.string('city', 50)
       table.string('state', 2)
 
+
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
+
+      table.integer('farm_id').unsigned().references('id').inTable('farms').onDelete('CASCADE')
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL

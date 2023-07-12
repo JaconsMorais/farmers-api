@@ -18,18 +18,6 @@ export default class extends BaseSchema {
       table.decimal('arable_area', 15, 2).notNullable()
       table.decimal('unused_area', 15, 2).notNullable()
 
-      table
-        .integer('culture_id')
-        .unsigned()
-        .references('id')
-        .inTable('cultures')
-        .onDelete('SET NULL')
-      table
-        .integer('producer_id')
-        .unsigned()
-        .references('id')
-        .inTable('producers')
-        .onDelete('CASCADE')
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL
